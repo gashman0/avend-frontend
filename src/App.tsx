@@ -6,14 +6,14 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import LoggedInLayout from "./LoggedInLayout";
+import Home from "./pages/Home";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route path="/" index errorElement={""}/>
+      <Route path="/" index element={<Home />} errorElement={""}/>
 
       <Route element={<LoggedInLayout />} errorElement={""}>
-
       </Route>
     </>
   ),
