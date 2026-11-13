@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/sections/Navbar'
 import Hero from '../components/sections/Hero'
 import HeroBackdrop from '../components/sections/HeroBackDrop'
@@ -11,11 +12,12 @@ import AiIntegration from '../components/sections/AiIntegration'
 import FinancialStrength from '../components/sections/FinancialStrength'
 
 const Home = () => {
+  const navigate = useNavigate();
   return (
     <>
       
       <div className='bg-[#15181E] min-h-screen'>
-        <NavBar />
+        <NavBar onLogin={() => navigate('/login')} onOpenAccount={() => navigate('signup')}/>
         <Hero />
         <HeroBackdrop>
           <img src="hero-ibkr-home-xl.png" alt="" className="w-full max-w-[1000px] h-auto"/>

@@ -355,10 +355,10 @@ export default function NavBar({
   /* ------------------------------------------------------------------------ */
 
   const loginBtn =
-    "inline-flex h-10 items-center justify-center border border-[#E1161F] px-5 text-[15px] text-[#E1161F] transition-colors hover:bg-[#E1161F]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+    "inline-flex h-10 items-center justify-center border border-[#E1161F] px-5 text-[15px] text-[#E1161F] transition-colors hover:bg-[#E1161F]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer";
 
   const openBtn =
-    "inline-flex h-10 items-center justify-center border border-[#E1161F] bg-[#E1161F] px-5 text-[15px] font-medium text-[#1a0507] transition-colors hover:bg-[#f01b25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+    "inline-flex h-10 items-center justify-center border border-[#E1161F] bg-[#E1161F] px-5 text-[15px] font-medium text-[#1a0507] transition-colors hover:bg-[#f01b25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer";
 
   /* ------------------------------------------------------------------------ */
   /* Render                                                                   */
