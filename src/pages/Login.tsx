@@ -1,8 +1,6 @@
 
-import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { useLogin } from '../network/auth/queries';
-import { useNavigate } from 'react-router-dom';
+import { useState, type FormEvent, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Eye,
@@ -12,19 +10,25 @@ import {
   ShieldCheck,
   Globe2,
   Fingerprint,
-} from 'lucide-react';
+} from "lucide-react";
+
+import { useLogin } from "../network/auth/queries";
 
 export default function Login() {
   const [formData, setFormData] = useState({
-    identifier: '',
-    password: '',
+    identifier: "",
+    password: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const {
+    mutate,
+    isPending,
+    error: loginError,
+    reset,
+  } = useLogin();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,48 +38,40 @@ export default function Login() {
       [name]: value,
     }));
 
-    setError('');
-    setSuccess('');
+    setFormError("");
+    reset();
   };
-
-  const { mutate, isPending, isError} = useLogin();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError('');
-    setSuccess('');
+    setFormError("");
+    reset();
 
     if (!formData.identifier.trim()) {
-      setError('Please enter your email address or username.');
+      setFormError("Please enter your email address or username.");
       return;
     }
 
     if (!formData.password) {
-      setError('Please enter your password.');
+      setFormError("Please enter your password.");
       return;
     }
 
-    const payload = {
+    mutate({
       identifier: formData.identifier.trim(),
       password: formData.password,
-      rememberMe,
-    };
-
-    // Backend authentication will be connected later.
-    console.log('AvendCrest login payload:', payload);
-
-    setSuccess(
-      'Your information has been validated. Login authentication will be enabled when the backend is connected.'
-    );
+    });
   };
+
+  const backendError =
+    loginError?.response?.data?.message ||
+    (loginError ? "Unable to sign in. Please try again." : "");
 
   return (
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white">
 
-      {/* =====================================
-          LEFT DESIGN PANEL - DESKTOP ONLY
-      ====================================== */}
+      {/* LEFT DESIGN PANEL - DESKTOP ONLY */}
 
       <section className="relative hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-[#15181e] px-12 xl:px-20 py-12 text-white">
 
@@ -130,11 +126,9 @@ export default function Login() {
           </h1>
 
           <p className="mt-8 max-w-md text-sm leading-8 text-gray-400 xl:text-base">
-
             Your digital investment journey continues here.
             Access your account and stay connected to your
             financial goals.
-
           </p>
 
           {/* Feature cards */}
@@ -212,10 +206,7 @@ export default function Login() {
 
       </section>
 
-
-      {/* =====================================
-          RIGHT LOGIN FORM
-      ====================================== */}
+      {/* RIGHT LOGIN FORM */}
 
       <section className="flex min-h-screen items-center justify-center bg-white px-5 py-8 sm:px-10 lg:px-12 xl:px-20">
 
@@ -239,7 +230,6 @@ export default function Login() {
 
           </div>
 
-
           {/* Form heading */}
 
           <div className="mb-10">
@@ -257,7 +247,6 @@ export default function Login() {
             </p>
 
           </div>
-
 
           {/* Login form */}
 
@@ -287,13 +276,13 @@ export default function Login() {
                   onChange={handleChange}
                   autoComplete="username"
                   required
+                  disabled={isPending}
                   className="h-full w-full bg-transparent text-sm text-[#15181e] outline-none placeholder:text-gray-400"
                 />
 
               </div>
 
             </div>
-
 
             {/* PASSWORD */}
 
@@ -324,19 +313,20 @@ export default function Login() {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                   autoComplete="current-password"
                   required
+                  disabled={isPending}
                   className="h-full w-full bg-transparent text-sm text-[#15181e] outline-none placeholder:text-gray-400"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   className="shrink-0 text-gray-400 transition hover:text-[#d91222]"
                 >
                   {showPassword ? (
@@ -350,71 +340,48 @@ export default function Login() {
 
             </div>
 
+            {/* FRONTEND ERROR */}
 
-            {/* REMEMBER ME */}
-
-            <div className="flex items-center gap-3">
-
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 cursor-pointer accent-[#d91222]"
-              />
-
-              <label
-                htmlFor="rememberMe"
-                className="cursor-pointer text-xs text-gray-500"
-              >
-                Remember me
-              </label>
-
-            </div>
-
-
-            {/* ERROR MESSAGE */}
-
-            {error && (
+            {formError && (
               <div
                 role="alert"
                 className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
               >
-                {error}
+                {formError}
               </div>
             )}
 
+            {/* BACKEND ERROR */}
 
-            {/* SUCCESS MESSAGE */}
-
-            {success && (
+            {backendError && (
               <div
-                role="status"
-                className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs text-green-700"
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
               >
-                {success}
+                {backendError}
               </div>
             )}
-
 
             {/* LOGIN BUTTON */}
 
             <button
               type="submit"
-              className="group flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-[#d91222] text-sm font-bold text-white shadow-lg shadow-[#d91222]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#b80f1d] hover:shadow-xl active:translate-y-0"
+              disabled={isPending}
+              className="group flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-[#d91222] text-sm font-bold text-white shadow-lg shadow-[#d91222]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#b80f1d] hover:shadow-xl active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
 
-              Sign in to your account
+              {isPending ? "Signing in..." : "Sign in to your account"}
 
-              <ArrowRight
-                size={18}
-                className="transition-transform group-hover:translate-x-1"
-              />
+              {!isPending && (
+                <ArrowRight
+                  size={18}
+                  className="transition-transform group-hover:translate-x-1"
+                />
+              )}
 
             </button>
 
           </form>
-
 
           {/* SECURITY INFORMATION */}
 
@@ -445,7 +412,6 @@ export default function Login() {
 
           </div>
 
-
           {/* REGISTER LINK */}
 
           <div className="mt-9 text-center text-xs text-gray-500">
@@ -460,7 +426,6 @@ export default function Login() {
             </Link>
 
           </div>
-
 
           {/* FOOTER */}
 

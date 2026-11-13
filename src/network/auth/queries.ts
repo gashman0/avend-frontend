@@ -29,7 +29,7 @@ export const useLogin = () => {
     const queryClient = useQueryClient();
 
     return useMutation<
-        any,
+        unknown,
         AxiosError<{message: string}>,
         loginPayload
     >({
