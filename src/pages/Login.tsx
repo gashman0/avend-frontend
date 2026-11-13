@@ -1,6 +1,8 @@
 
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useLogin } from '../network/auth/queries';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Eye,
@@ -35,6 +37,8 @@ export default function Login() {
     setError('');
     setSuccess('');
   };
+
+  const { mutate, isPending, isError} = useLogin();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
