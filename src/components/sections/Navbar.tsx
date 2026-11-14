@@ -162,7 +162,7 @@ function Logo({ className = "" }: { className?: string }) {
       aria-label="Interactive Brokers home"
       className={`inline-flex items-center gap-1.5 text-white ${className}`}
     >
-      <svg
+      {/* <svg
         viewBox="0 0 32 40"
         aria-hidden="true"
         className="h-8 w-auto sm:h-10"
@@ -179,11 +179,12 @@ function Logo({ className = "" }: { className?: string }) {
           d="M9.6 28.4c.7.1 1.5.1 2.2.1h2.4l-3.6 5.6-1-5.7Z"
           fill="#A60F17"
         />
-      </svg>
+      </svg> */}
+      <img src="/Avend Creast 8.svg" alt="" className="w-16"/>
 
       <span className="select-none text-[22px] leading-none tracking-tight sm:text-[30px]">
-        <span className="font-bold">Interactive</span>
-        <span className="font-normal">Brokers</span>
+        <span className="font-bold">Avend</span>
+        <span className="font-normal">Crest</span>
       </span>
     </a>
   );
