@@ -1,26 +1,37 @@
-
 import { Outlet, Navigate } from "react-router-dom";
 import { useMe } from "./network/me/queries";
+import Sidebar from "./components/dashboard/Sidebar";
+import DashboardHeader from "./components/dashboard/DashboardHeader";
+
 
 const LoggedInLayout = () => {
   const { data: me, isPending, isError } = useMe();
 
-  // Wait until the authentication request finishes.
   if (isPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Checking your authentication...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#15181E] text-white">
+        Checking your authentication...
       </div>
     );
   }
 
-  // Redirect if the authentication request failed.
   if (isError || !me) {
     return <Navigate to="/" replace />;
   }
 
-  // User is authenticated.
-  return <Outlet />;
+return (
+  <div className="min-h-screen bg-[#15181E]">
+    <Sidebar />
+
+    <main className="ml-64 min-h-screen">
+      <DashboardHeader />
+
+      <div className="p-8">
+        <Outlet />
+      </div>
+    </main>
+  </div>
+);
 };
 
 export default LoggedInLayout;

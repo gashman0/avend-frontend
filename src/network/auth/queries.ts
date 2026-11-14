@@ -45,14 +45,23 @@ export const useLogin = () => {
 };
 
 export const useLogout = () => {
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: () => logout(),
-        onSuccess: () => {
-            queryClient.setQueryData([queryKeys.users.getMe], null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-            navigate('/');
-        }
-    })
-}
+  return useMutation<
+    unknown,
+    AxiosError<{ message: string }>,
+    void
+  >({
+    mutationFn: () => logout(),
+
+    onSuccess: () => {
+      queryClient.setQueryData(
+        [queryKeys.users.getMe],
+        null
+      );
+
+      navigate("/");
+    },
+  });
+};
