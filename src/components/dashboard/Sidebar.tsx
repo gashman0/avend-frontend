@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useLogout } from "../../network/auth/queries";
 import Modal from "../Ui/Modal";
 
@@ -15,7 +15,13 @@ import {
   Users,
   AlertTriangle,
   Loader2,
+  X,
 } from "lucide-react";
+
+type SidebarProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
 
 const navigation = [
   {
@@ -50,9 +56,10 @@ const navigation = [
   },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  const location = useLocation();
   const logoutMutation = useLogout();
 
   const handleLogout = () => {
@@ -67,21 +74,47 @@ const Sidebar = () => {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-white/10 bg-[#15181E] px-5 py-6 text-white">
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-        {/* Logo */}
-        <div className="mb-10 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E1161F] text-xl font-bold text-white">
-            A
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-66 flex-col border-r border-white/10 bg-[#15181E] px-5 py-6 text-white transition-transform duration-300 ease-in-out md:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Logo and mobile close button */}
+        <div className="mb-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="/Avend Creast 8.svg"
+              alt="AvendCrest"
+              className="w-12"
+            />
+
+            <span className="text-2xl font-bold tracking-wide text-white">
+              AvendCrest
+            </span>
           </div>
 
-          <span className="text-xl font-semibold tracking-wide text-white">
-            AvendCrest
-          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close sidebar"
+            className="rounded-lg p-2 text-white/60 transition hover:bg-white/10 hover:text-white md:hidden ml-14"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         {/* Main navigation */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-white/40">
             Workspace
           </p>
@@ -95,6 +128,7 @@ const Sidebar = () => {
                   key={item.name}
                   to={item.path}
                   end={item.path === "/dashboard"}
+                  onClick={onClose}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 ${
                       isActive
@@ -113,9 +147,9 @@ const Sidebar = () => {
 
         {/* Bottom navigation */}
         <div className="space-y-2 border-t border-white/10 pt-5">
-
           <button
             type="button"
+            onClick={onClose}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-white/65 transition-colors hover:bg-white/5 hover:text-white"
           >
             <Settings size={19} strokeWidth={1.8} />
@@ -124,13 +158,15 @@ const Sidebar = () => {
 
           <button
             type="button"
-            onClick={() => setIsLogoutModalOpen(true)}
+            onClick={() => {
+              setIsLogoutModalOpen(true);
+              onClose();
+            }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-white/65 transition-colors hover:bg-red-500/10 hover:text-red-400"
           >
             <LogOut size={19} strokeWidth={1.8} />
             Sign out
           </button>
-
         </div>
       </aside>
 
@@ -150,7 +186,6 @@ const Sidebar = () => {
         maxWidth="sm"
       >
         <div className="space-y-6">
-
           <div className="flex items-start gap-3 rounded-xl border border-red-500/10 bg-red-500/5 p-4">
             <AlertTriangle
               size={20}
@@ -171,7 +206,6 @@ const Sidebar = () => {
           )}
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
             <button
               type="button"
               disabled={logoutMutation.isPending}
@@ -199,7 +233,6 @@ const Sidebar = () => {
                 </>
               )}
             </button>
-
           </div>
         </div>
       </Modal>

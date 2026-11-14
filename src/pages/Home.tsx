@@ -13,6 +13,10 @@ import PricingPlans from '../components/sections/PricingPlans'
 import Platforms from '../components/sections/Platforms'
 import AiIntegration from '../components/sections/AiIntegration'
 import FinancialStrength from '../components/sections/FinancialStrength'
+import GetStarted from '../components/sections/GetStarted'
+import Disclosures from '../components/sections/Disclosures'
+import LegalNotice from '../components/sections/LegalNotice'
+import Footer from '../components/sections/Footer'
 
 const Home = () => {
   const navigate = useNavigate();
@@ -54,6 +58,10 @@ const Home = () => {
       <Platforms imageSrc="professional-trading-tools-xl.png" />
       <AiIntegration />
       <FinancialStrength />
+      <GetStarted backgroundSrc='bg-page-cta-xl.jpg'/>
+      <Disclosures />
+      <LegalNotice />
+      <Footer />
     </div>
   );
 };
