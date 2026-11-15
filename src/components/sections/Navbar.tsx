@@ -162,24 +162,6 @@ function Logo({ className = "" }: { className?: string }) {
       aria-label="Interactive Brokers home"
       className={`inline-flex items-center gap-1.5 text-white ${className}`}
     >
-      {/* <svg
-        viewBox="0 0 32 40"
-        aria-hidden="true"
-        className="h-8 w-auto sm:h-10"
-      >
-        <path
-          d="M17.5 0 5.2 17.2c-1.1 1.6-1.6 3.1-1.6 4.6 0 3.3 2.1 5.7 5.2 6.4L11 40l-2.5-9.4c-1.8-.3-3.2-1.5-3.2-3.5 0-1.1.5-2.3 1.5-3.8L17.5 0Z"
-          fill="#E1161F"
-        />
-        <path
-          d="M12.8 21.3c-1.2 1.7-1.6 2.9-1.6 4 0 2 1.2 3.4 3.4 3.4h4.9c3.4 0 5.7-2.2 5.7-5.1 0-1.8-.8-3.4-2.4-4.7L17.5 12l-4.7 9.3Z"
-          fill="#E1161F"
-        />
-        <path
-          d="M9.6 28.4c.7.1 1.5.1 2.2.1h2.4l-3.6 5.6-1-5.7Z"
-          fill="#A60F17"
-        />
-      </svg> */}
       <img src="/Avend Creast 8.svg" alt="" className="w-16"/>
 
       <span className="select-none text-[22px] leading-none tracking-tight sm:text-[30px]">

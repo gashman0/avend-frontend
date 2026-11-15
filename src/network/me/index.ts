@@ -10,3 +10,13 @@ export const me = async () => {
         throw error;
     }
 }
+
+export const dashboard = async () => {
+    try{
+        const response = await api.get(routes.dashboard.dashboard);
+
+        return response.data;
+    }catch(error){
+        throw error;
+    }
+}
