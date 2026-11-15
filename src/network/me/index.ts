@@ -20,3 +20,13 @@ export const dashboard = async () => {
         throw error;
     }
 }
+
+export const wallet = async () => {
+    try{
+        const response = await api.get(routes.dashboard.wallet);
+
+        return response.data
+    }catch(error){
+        throw error;
+    }
+}

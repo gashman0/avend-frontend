@@ -1,8 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { me } from ".";
-import { dashboard } from ".";
+import { me, dashboard, wallet } from ".";
 import queryKeys from "../query-keys";
-import type{ MeResponse, DashboardSummaryResponse } from "./types";
+import type{ MeResponse, DashboardSummaryResponse, GetWalletResponse } from "./types";
 
 export const useMe = () => {
     return useQuery<MeResponse>({
@@ -22,4 +21,14 @@ export const useDashboard = () => {
         staleTime: 1000 * 60 * 5,
         refetchOnWindowFocus: false,
     });
+}
+
+export const useWallet =() => {
+    return useQuery<GetWalletResponse>({
+        queryKey: [queryKeys.users.getWallet],
+        queryFn: wallet,
+        retry: false,
+        staleTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+    })
 }
