@@ -8,6 +8,7 @@ const routes = {
     dashboard: {
         me: '/me',
         dashboard: '/dashboard',
+        wallet: '/wallet',
     }
 }
 

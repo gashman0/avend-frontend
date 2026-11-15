@@ -3,91 +3,121 @@ import {
   Wallet as WalletIcon,
   ArrowDownToLine,
   ArrowUpFromLine,
-  Bitcoin,
   Clock3,
   CircleCheck,
   CircleAlert,
-  Copy,
   Plus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useWallet } from "../../network/me/queries";
 
-const assets = [
-  {
+const assetDetails = {
+  BTC: {
     name: "Bitcoin",
-    symbol: "BTC",
-    balance: "0.045 BTC",
-    value: "$4,320.00",
-    price: "$96,000.00",
-    color: "bg-orange-500/10 text-orange-400",
     initial: "₿",
+    color: "bg-orange-500/10 text-orange-400",
   },
-  {
+  ETH: {
     name: "Ethereum",
-    symbol: "ETH",
-    balance: "1.25 ETH",
-    value: "$3,125.00",
-    price: "$2,500.00",
-    color: "bg-indigo-500/10 text-indigo-400",
     initial: "Ξ",
+    color: "bg-indigo-500/10 text-indigo-400",
   },
-  {
+  USDT: {
     name: "Tether",
-    symbol: "USDT",
-    balance: "2,500 USDT",
-    value: "$2,500.00",
-    price: "$1.00",
-    color: "bg-emerald-500/10 text-emerald-400",
     initial: "₮",
+    color: "bg-emerald-500/10 text-emerald-400",
   },
-  {
+  BNB: {
     name: "BNB",
-    symbol: "BNB",
-    balance: "4 BNB",
-    value: "$2,400.00",
-    price: "$600.00",
-    color: "bg-yellow-500/10 text-yellow-400",
     initial: "◆",
+    color: "bg-yellow-500/10 text-yellow-400",
   },
-  {
+  SOL: {
     name: "Solana",
-    symbol: "SOL",
-    balance: "15 SOL",
-    value: "$2,250.00",
-    price: "$150.00",
-    color: "bg-purple-500/10 text-purple-400",
     initial: "◎",
+    color: "bg-purple-500/10 text-purple-400",
   },
-];
+};
 
-const deposits = [
-  {
-    id: "DEP-10245",
-    asset: "USDT",
-    amount: "1,000 USDT",
-    date: "Nov 12, 2026",
-    status: "Approved",
-  },
-  {
-    id: "DEP-10244",
-    asset: "BTC",
-    amount: "0.015 BTC",
-    date: "Nov 10, 2026",
-    status: "Pending Review",
-  },
-  {
-    id: "DEP-10243",
-    asset: "ETH",
-    amount: "0.5 ETH",
-    date: "Nov 08, 2026",
-    status: "Approved",
-  },
-];
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+const formatCrypto = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 8,
+  }).format(value);
+
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 
 const Wallet = () => {
   const navigate = useNavigate();
 
-  const totalBalance = "$14,595.00";
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+  } = useWallet();
+
+  const wallet = data?.wallet;
+  const recentDeposits = data?.recentDeposits ?? [];
+
+  const assets = wallet
+    ? (Object.entries(assetDetails) as [
+        keyof typeof assetDetails,
+        (typeof assetDetails)[keyof typeof assetDetails],
+      ][]).map(([symbol, details]) => {
+        const assetBalance = wallet.assets?.[symbol];
+
+        return {
+          symbol,
+          ...details,
+          balance: assetBalance?.balance ?? 0,
+          valueUSD: assetBalance?.valueUSD ?? 0,
+          priceUSD: assetBalance?.priceUSD ?? 0,
+        };
+      })
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center text-white/60">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#E1161F]" />
+          <p className="text-sm">Loading your wallet...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center text-center text-white">
+        <CircleAlert size={36} className="mb-4 text-red-400" />
+        <h3 className="text-lg font-semibold">Unable to load wallet</h3>
+        <p className="mt-2 max-w-sm text-sm text-white/45">
+          We couldn't retrieve your wallet information. Please try again.
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-5 rounded-lg bg-[#E1161F] px-5 py-2.5 text-sm font-semibold transition hover:bg-[#c9131b]"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 text-white">
@@ -121,7 +151,7 @@ const Wallet = () => {
           </div>
 
           <h3 className="mt-4 text-4xl font-semibold tracking-tight">
-            {totalBalance}
+            {formatCurrency(wallet?.totalBalanceUSD ?? 0)}
           </h3>
 
           <p className="mt-2 text-sm text-white/40">
@@ -159,7 +189,9 @@ const Wallet = () => {
               Your available cryptocurrency balances
             </p>
           </div>
-          <span className="text-xs text-white/40">5 supported assets</span>
+          <span className="text-xs text-white/40">
+            {assets.length} supported assets
+          </span>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#1B1F27]">
@@ -167,7 +199,9 @@ const Wallet = () => {
             <div
               key={asset.symbol}
               className={`flex flex-col gap-4 px-5 py-5 transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between ${
-                index !== assets.length - 1 ? "border-b border-white/10" : ""
+                index !== assets.length - 1
+                  ? "border-b border-white/10"
+                  : ""
               }`}
             >
               <div className="flex items-center gap-4">
@@ -186,9 +220,14 @@ const Wallet = () => {
               </div>
 
               <div className="sm:text-right">
-                <p className="font-semibold">{asset.balance}</p>
+                <p className="font-semibold">
+                  {formatCrypto(asset.balance)} {asset.symbol}
+                </p>
                 <p className="mt-1 text-xs text-white/45">
-                  {asset.value}
+                  {formatCurrency(asset.valueUSD)}
+                </p>
+                <p className="mt-1 text-xs text-white/35">
+                  Price: {formatCurrency(asset.priceUSD)}
                 </p>
               </div>
             </div>
@@ -218,41 +257,65 @@ const Wallet = () => {
             </thead>
 
             <tbody>
-              {deposits.map((deposit) => (
-                <tr
-                  key={deposit.id}
-                  className="border-b border-white/5 last:border-0"
-                >
-                  <td className="px-5 py-4 text-sm text-white/70">
-                    {deposit.id}
-                  </td>
-                  <td className="px-5 py-4 text-sm font-medium">
-                    {deposit.asset}
-                  </td>
-                  <td className="px-5 py-4 text-sm">
-                    {deposit.amount}
-                  </td>
-                  <td className="px-5 py-4 text-sm text-white/50">
-                    {deposit.date}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
-                        deposit.status === "Approved"
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : "bg-yellow-500/10 text-yellow-400"
-                      }`}
-                    >
-                      {deposit.status === "Approved" ? (
-                        <CircleCheck size={13} />
-                      ) : (
-                        <Clock3 size={13} />
-                      )}
-                      {deposit.status}
-                    </span>
+              {recentDeposits.length > 0 ? (
+                recentDeposits.map((deposit) => (
+                  <tr
+                    key={deposit._id}
+                    className="border-b border-white/5 last:border-0"
+                  >
+                    <td className="px-5 py-4 text-sm text-white/70">
+                      {deposit.transactionId}
+                    </td>
+
+                    <td className="px-5 py-4 text-sm font-medium">
+                      {deposit.asset}
+                    </td>
+
+                    <td className="px-5 py-4 text-sm">
+                      {formatCrypto(deposit.amount)} {deposit.asset}
+                    </td>
+
+                    <td className="px-5 py-4 text-sm text-white/50">
+                      {formatDate(deposit.createdAt)}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                          deposit.status === "completed" ||
+                          deposit.status === "approved"
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : deposit.status === "rejected" ||
+                                deposit.status === "failed"
+                              ? "bg-red-500/10 text-red-400"
+                              : "bg-yellow-500/10 text-yellow-400"
+                        }`}
+                      >
+                        {deposit.status === "completed" ||
+                        deposit.status === "approved" ? (
+                          <CircleCheck size={13} />
+                        ) : deposit.status === "rejected" ||
+                          deposit.status === "failed" ? (
+                          <CircleAlert size={13} />
+                        ) : (
+                          <Clock3 size={13} />
+                        )}
+
+                        {deposit.status.replaceAll("_", " ")}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-5 py-10 text-center text-sm text-white/40"
+                  >
+                    You haven't made any deposits yet.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

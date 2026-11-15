@@ -45,3 +45,42 @@ export interface DashboardSummaryResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+
+export interface WalletAssetBalance {
+  balance: number;
+  valueUSD: number;
+  priceUSD: number;
+}
+
+export interface WalletAssets {
+  BTC: WalletAssetBalance;
+  ETH: WalletAssetBalance;
+  USDT: WalletAssetBalance;
+  BNB: WalletAssetBalance;
+  SOL: WalletAssetBalance;
+}
+
+export interface WalletResponse {
+  _id: string;
+  user: string;
+  assets: WalletAssets;
+  totalBalanceUSD: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletDeposit {
+  _id: string;
+  transactionId: string;
+  asset: string;
+  amount: number;
+  amountUSD: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface GetWalletResponse {
+  wallet: WalletResponse;
+  recentDeposits: WalletDeposit[];
+}
