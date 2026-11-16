@@ -147,3 +147,27 @@ export interface GetUserInvestmentsResponse {
   summary: UserInvestmentSummary;
   investments: UserInvestment[];
 }
+
+export interface UserTransaction {
+  id: string;
+  type:
+    | "Deposit"
+    | "Investment"
+    | "ROI Credit"
+    | "Principal Return"
+    | "Withdrawal"
+    | "Referral Reward";
+  asset: "BTC" | "ETH" | "USDT" | "BNB" | "SOL";
+  amount: number;
+  usdValue: number;
+  date: string;
+  status: "Completed" | "Pending" | "Failed" | "Rejected";
+  description: string;
+  txid?: string;
+}
+
+export interface GetUserTransactionsResponse {
+  success: boolean;
+  count: number;
+  transactions: UserTransaction[];
+}

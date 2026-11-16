@@ -6,6 +6,7 @@ const queryKeys = {
         getWallet: ['wallet', 'getWallet'] as const,
         getInvestmentPlans: ['investmentPlans', 'getInvestMentPlans'] as const,
         getUserInvestments: ['userInvestments', 'getUserInvestments'] as const,
+        getUserTransactions: ['userTransactions', 'getUserTransactions'] as const,
     },
 }
 
