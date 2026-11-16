@@ -1,5 +1,6 @@
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -14,14 +15,17 @@ import {
   CircleX,
   Eye,
   X,
+  Gift,
 } from "lucide-react";
+import { userTransactions } from "../../network/me";
 
 type TransactionType =
   | "Deposit"
   | "Investment"
   | "ROI Credit"
   | "Principal Return"
-  | "Withdrawal";
+  | "Withdrawal"
+  | "Referral Reward";
 
 type TransactionStatus =
   | "Completed"
@@ -41,100 +45,11 @@ type Transaction = {
   txid?: string;
 };
 
-const transactions: Transaction[] = [
-  {
-    id: "TXN-10025",
-    type: "ROI Credit",
-    asset: "USDT",
-    amount: 16,
-    usdValue: 16,
-    date: "Nov 13, 2026, 09:00 AM",
-    status: "Completed",
-    description: "Daily ROI credit from Growth Plan investment INV-10025.",
-  },
-  {
-    id: "TXN-10024",
-    type: "Deposit",
-    asset: "USDT",
-    amount: 1000,
-    usdValue: 1000,
-    date: "Nov 12, 2026, 02:35 PM",
-    status: "Completed",
-    description: "USDT deposit approved and credited to your wallet.",
-    txid: "0x8a71b2c9f4d63e10a2b5c7d9e1f3a6b8",
-  },
-  {
-    id: "TXN-10023",
-    type: "Investment",
-    asset: "USDT",
-    amount: 2000,
-    usdValue: 2000,
-    date: "Nov 11, 2026, 11:20 AM",
-    status: "Completed",
-    description: "Funds allocated to Growth Plan investment INV-10025.",
-  },
-  {
-    id: "TXN-10022",
-    type: "ROI Credit",
-    asset: "ETH",
-    amount: 0.02,
-    usdValue: 50,
-    date: "Nov 11, 2026, 09:00 AM",
-    status: "Completed",
-    description: "Daily ROI credit from Premium Plan investment INV-10023.",
-  },
-  {
-    id: "TXN-10021",
-    type: "Withdrawal",
-    asset: "USDT",
-    amount: 250,
-    usdValue: 250,
-    date: "Nov 10, 2026, 04:15 PM",
-    status: "Pending",
-    description: "Withdrawal request awaiting processing.",
-  },
-  {
-    id: "TXN-10020",
-    type: "Principal Return",
-    asset: "BTC",
-    amount: 0.005,
-    usdValue: 480,
-    date: "Nov 09, 2026, 10:00 AM",
-    status: "Completed",
-    description: "Principal returned following Starter Plan maturity.",
-  },
-  {
-    id: "TXN-10019",
-    type: "Deposit",
-    asset: "BTC",
-    amount: 0.015,
-    usdValue: 1440,
-    date: "Nov 10, 2026, 01:30 PM",
-    status: "Pending",
-    description: "BTC deposit submitted and awaiting review.",
-    txid: "bc1q7x9a2m4p6r8t3v5w",
-  },
-  {
-    id: "TXN-10018",
-    type: "Investment",
-    asset: "ETH",
-    amount: 0.5,
-    usdValue: 1250,
-    date: "Nov 08, 2026, 12:00 PM",
-    status: "Completed",
-    description: "Funds allocated to Starter Plan investment.",
-  },
-  {
-    id: "TXN-10017",
-    type: "Withdrawal",
-    asset: "USDT",
-    amount: 100,
-    usdValue: 100,
-    date: "Nov 07, 2026, 03:45 PM",
-    status: "Failed",
-    description: "Withdrawal could not be completed.",
-  },
-];
+type TransactionsResponse = {
+  success: boolean;
+  count: number;
+  transactions: Transaction[];
+};
 
 const typeOptions = [
   "All Types",
@@ -143,6 +58,7 @@ const typeOptions = [
   "ROI Credit",
   "Principal Return",
   "Withdrawal",
+  "Referral Reward",
 ];
 
 const statusOptions = [
@@ -165,6 +81,22 @@ const formatCrypto = (amount: number, asset: string) =>
     maximumFractionDigits: 8,
   })} ${asset}`;
 
+const formatDate = (date: string) => {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Date unavailable";
+  }
+
+  return parsedDate.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const getTypeIcon = (type: TransactionType) => {
   switch (type) {
     case "Deposit":
@@ -177,6 +109,8 @@ const getTypeIcon = (type: TransactionType) => {
       return <RefreshCw size={17} />;
     case "Withdrawal":
       return <ArrowUpRight size={17} />;
+    case "Referral Reward":
+      return <Gift size={17} />;
   }
 };
 
@@ -192,6 +126,8 @@ const getTypeColor = (type: TransactionType) => {
       return "bg-cyan-500/10 text-cyan-400";
     case "Withdrawal":
       return "bg-orange-500/10 text-orange-400";
+    case "Referral Reward":
+      return "bg-pink-500/10 text-pink-400";
   }
 };
 
@@ -227,12 +163,33 @@ const Transactions = () => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
+  // Fetch transactions from the backend
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery<TransactionsResponse>({
+    queryKey: ["user-transactions"],
+    queryFn: userTransactions,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+
+  const transactions = data?.transactions ?? [];
+
+  // Search and filters
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
+      const searchTerm = search.toLowerCase();
+
       const matchesSearch =
-        transaction.id.toLowerCase().includes(search.toLowerCase()) ||
-        transaction.asset.toLowerCase().includes(search.toLowerCase()) ||
-        transaction.description.toLowerCase().includes(search.toLowerCase());
+        transaction.id.toLowerCase().includes(searchTerm) ||
+        transaction.asset.toLowerCase().includes(searchTerm) ||
+        transaction.description.toLowerCase().includes(searchTerm) ||
+        transaction.type.toLowerCase().includes(searchTerm);
 
       const matchesType =
         selectedType === "All Types" ||
@@ -244,8 +201,9 @@ const Transactions = () => {
 
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [search, selectedType, selectedStatus]);
+  }, [transactions, search, selectedType, selectedStatus]);
 
+  // Summary calculations
   const totalDeposits = transactions
     .filter(
       (transaction) =>
@@ -266,6 +224,14 @@ const Transactions = () => {
     .filter(
       (transaction) =>
         transaction.type === "ROI Credit" &&
+        transaction.status === "Completed"
+    )
+    .reduce((total, transaction) => total + transaction.usdValue, 0);
+
+  const totalReferralRewards = transactions
+    .filter(
+      (transaction) =>
+        transaction.type === "Referral Reward" &&
         transaction.status === "Completed"
     )
     .reduce((total, transaction) => total + transaction.usdValue, 0);
@@ -327,14 +293,14 @@ const Transactions = () => {
 
         <div className="rounded-xl border border-white/10 bg-[#1B1F27] p-5">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-white/45">Completed Transactions</p>
-            <CircleCheck size={19} className="text-emerald-400" />
+            <p className="text-sm text-white/45">Referral Rewards</p>
+            <Gift size={19} className="text-pink-400" />
           </div>
           <h3 className="mt-4 text-2xl font-semibold">
-            {completedCount}
+            {formatCurrency(totalReferralRewards)}
           </h3>
           <p className="mt-2 text-xs text-white/35">
-            Successful transactions
+            Successfully credited rewards
           </p>
         </div>
       </div>
@@ -359,7 +325,7 @@ const Transactions = () => {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search transaction reference or asset..."
+              placeholder="Search transaction reference, asset, or type..."
               className="w-full rounded-lg border border-white/10 bg-[#1B1F27] py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#E1161F]/60"
             />
           </div>
@@ -389,104 +355,136 @@ const Transactions = () => {
           </select>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#1B1F27]">
-          <table className="w-full min-w-[900px] text-left">
-            <thead>
-              <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
-                <th className="px-5 py-4 font-medium">Transaction</th>
-                <th className="px-5 py-4 font-medium">Asset</th>
-                <th className="px-5 py-4 font-medium">Amount</th>
-                <th className="px-5 py-4 font-medium">USD Value</th>
-                <th className="px-5 py-4 font-medium">Date</th>
-                <th className="px-5 py-4 font-medium">Status</th>
-                <th className="px-5 py-4 font-medium">Details</th>
-              </tr>
-            </thead>
+        {/* Loading state */}
+        {isLoading && (
+          <div className="rounded-xl border border-white/10 bg-[#1B1F27] px-5 py-16 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#E1161F]" />
+            <p className="mt-4 text-sm text-white/45">
+              Loading your transactions...
+            </p>
+          </div>
+        )}
 
-            <tbody>
-              {filteredTransactions.map((transaction) => (
-                <tr
-                  key={transaction.id}
-                  className="border-b border-white/5 last:border-0 transition hover:bg-white/[0.02]"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg ${getTypeColor(
-                          transaction.type
-                        )}`}
+        {/* Error state */}
+        {isError && (
+          <div className="rounded-xl border border-red-500/20 bg-[#1B1F27] px-5 py-12 text-center">
+            <CircleX size={30} className="mx-auto text-red-400" />
+            <p className="mt-3 text-sm text-white/70">
+              We couldn't load your transactions.
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="mt-4 rounded-lg bg-[#E1161F] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#c9131b] disabled:opacity-50"
+            >
+              {isFetching ? "Retrying..." : "Try Again"}
+            </button>
+          </div>
+        )}
+
+        {/* Transactions table */}
+        {!isLoading && !isError && (
+          <>
+            <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#1B1F27]">
+              <table className="w-full min-w-[900px] text-left">
+                <thead>
+                  <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
+                    <th className="px-5 py-4 font-medium">Transaction</th>
+                    <th className="px-5 py-4 font-medium">Asset</th>
+                    <th className="px-5 py-4 font-medium">Amount</th>
+                    <th className="px-5 py-4 font-medium">USD Value</th>
+                    <th className="px-5 py-4 font-medium">Date</th>
+                    <th className="px-5 py-4 font-medium">Status</th>
+                    <th className="px-5 py-4 font-medium">Details</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredTransactions.map((transaction) => (
+                    <tr
+                      key={transaction.id}
+                      className="border-b border-white/5 last:border-0 transition hover:bg-white/[0.02]"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-lg ${getTypeColor(
+                              transaction.type
+                            )}`}
+                          >
+                            {getTypeIcon(transaction.type)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {transaction.type}
+                            </p>
+                            <p className="mt-1 text-xs text-white/40">
+                              {transaction.id}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-4 text-sm font-medium">
+                        {transaction.asset}
+                      </td>
+
+                      <td className="px-5 py-4 text-sm">
+                        {formatCrypto(transaction.amount, transaction.asset)}
+                      </td>
+
+                      <td className="px-5 py-4 text-sm font-medium">
+                        {formatCurrency(transaction.usdValue)}
+                      </td>
+
+                      <td className="px-5 py-4 text-sm text-white/50">
+                        {formatDate(transaction.date)}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getStatusStyle(
+                            transaction.status
+                          )}`}
+                        >
+                          {getStatusIcon(transaction.status)}
+                          {transaction.status}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTransaction(transaction)}
+                          className="flex items-center gap-1.5 text-sm text-white/50 transition hover:text-white"
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {filteredTransactions.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-5 py-12 text-center text-sm text-white/40"
                       >
-                        {getTypeIcon(transaction.type)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {transaction.type}
-                        </p>
-                        <p className="mt-1 text-xs text-white/40">
-                          {transaction.id}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
+                        No transactions found. Try changing your search or filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                  <td className="px-5 py-4 text-sm font-medium">
-                    {transaction.asset}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm">
-                    {formatCrypto(transaction.amount, transaction.asset)}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm font-medium">
-                    {formatCurrency(transaction.usdValue)}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-white/50">
-                    {transaction.date}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getStatusStyle(
-                        transaction.status
-                      )}`}
-                    >
-                      {getStatusIcon(transaction.status)}
-                      {transaction.status}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTransaction(transaction)}
-                      className="flex items-center gap-1.5 text-sm text-white/50 transition hover:text-white"
-                    >
-                      <Eye size={16} />
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {filteredTransactions.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-sm text-white/40"
-                  >
-                    No transactions found. Try changing your search or filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="mt-3 text-xs text-white/35">
-          Showing {filteredTransactions.length} of {transactions.length} transactions
-        </p>
+            <p className="mt-3 text-xs text-white/35">
+              Showing {filteredTransactions.length} of {transactions.length} transactions
+            </p>
+          </>
+        )}
       </section>
 
       {/* Transaction details modal */}
@@ -565,7 +563,7 @@ const Transactions = () => {
               <div className="flex justify-between gap-4 text-sm">
                 <span className="text-white/40">Date</span>
                 <span className="text-right">
-                  {selectedTransaction.date}
+                  {formatDate(selectedTransaction.date)}
                 </span>
               </div>
 

@@ -50,3 +50,13 @@ export const userInvestments = async () => {
         throw error;
     }
 }
+
+export const userTransactions = async () => {
+    try {
+        const response = await api.get(routes.dashboard.userTransactions);
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

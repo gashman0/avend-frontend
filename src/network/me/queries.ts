@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { me, dashboard, wallet, investmentPlans, userInvestments } from ".";
+import { me, dashboard, wallet, investmentPlans, userInvestments, userTransactions } from ".";
 import queryKeys from "../query-keys";
 import type {
   MeResponse,
@@ -7,6 +7,7 @@ import type {
   GetWalletResponse,
   GetInvestmentPlansResponse,
   GetUserInvestmentsResponse,
+  GetUserTransactionsResponse,
 } from "./types";
 
 export const useMe = () => {
@@ -58,3 +59,13 @@ export const useGetUserInvestments = () => {
         refetchOnWindowFocus: false,
     });
 };
+
+export const useGetUserTransactions = () => {
+    return useQuery<GetUserTransactionsResponse>({
+        queryKey: [queryKeys.users.getUserTransactions],
+        queryFn: userTransactions,
+        retry: false,
+        staleTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+    });
+}
