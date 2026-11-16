@@ -9,6 +9,8 @@ const routes = {
         me: '/me',
         dashboard: '/dashboard',
         wallet: '/wallet',
+        investmenstPlans: '/investment-plans',
+        userInvestments: '/investments',
     }
 }
 
